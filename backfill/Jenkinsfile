@@ -9,7 +9,7 @@ pipeline {
             }
             steps {
                 dir('backfill') {
-                    sh 'bash backfill/package.sh'
+                    sh 'bash package.sh'
                 }
             }
         }
