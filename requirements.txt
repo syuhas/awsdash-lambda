@@ -1,0 +1,4 @@
+boto3
+sqlalchemy
+loguru
+psycopg2-binary
