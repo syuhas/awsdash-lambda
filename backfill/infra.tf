@@ -2,6 +2,15 @@ provider "aws" {
     region = "us-east-1"
 }
 
+terraform {
+  backend "s3" {
+    bucket = "terraform-lock-bucket"
+    key    = "lambdabackfills3/terraform.tfstate"
+    region = "us-east-1"
+    dynamodb_table = "terraform-lock-table"
+  }
+}
+
 resource "aws_lambda_function" "backfill" {
   filename      = "lambda_function.zip"
   function_name = "BackfillDatabaseS3"
