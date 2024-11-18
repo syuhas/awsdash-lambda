@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo dnf install zip -y    # install the zip utility
+sudo dnf install python3-pip -y    # install the pip package manager
 
 mkdir -p package    # create a directory to store the dependencies
 
