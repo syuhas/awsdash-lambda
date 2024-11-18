@@ -22,6 +22,7 @@ accounts = [
 ]
 
 def lambda_handler(event, context):
+    print(event)
     logger.info("Retrieving existing buckets...")
     for account in accounts:
         session = getAccountSession(account)
