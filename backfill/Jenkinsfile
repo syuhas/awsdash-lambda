@@ -8,10 +8,9 @@ pipeline {
                 expression { params.Options == 'Deploy'}
             }
             steps {
-                sh 'pwd'
-                sh 'ls -l'
-                sh 'ls -a'
-                sh 'bash package.sh'
+                dir('backfill') {
+                    sh 'bash backfill/package.sh'
+                }
             }
         }
 
@@ -21,9 +20,11 @@ pipeline {
             }
             steps {
                     
+                dir('backfill') {
                     // sh 'terraform init'
                     sh 'terraform plan -out=plan.tfplan'
                     sh 'terraform apply -auto-approve plan.tfplan'
+                }
                     
             }
         }
@@ -33,7 +34,7 @@ pipeline {
                 expression { params.Options == 'Destroy' }
             }
             steps {
-                dir('deploy') {
+                dir('backfill') {
                     sh 'terraform init'
                     sh 'terraform destroy -auto-approve'
                 }
