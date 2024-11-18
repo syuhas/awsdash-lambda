@@ -8,6 +8,7 @@ pipeline {
                 expression { params.Options == 'Deploy'}
             }
             steps {
+                sh 'pwd'
                 sh 'bash package.sh'
             }
         }
