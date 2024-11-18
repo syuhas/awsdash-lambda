@@ -2,3 +2,4 @@ boto3
 sqlalchemy
 loguru
 psycopg2-binary
+aws-psycopg2
