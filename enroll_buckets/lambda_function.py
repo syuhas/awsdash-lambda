@@ -76,7 +76,3 @@ def getAccountSession(account: dict) -> boto3.session.Session:
         region_name=account['region']
     )
     return account_session
-
-
-if __name__ == '__main__':
-    lambda_handler(None, None)
