@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     stages {
-
         stage('Package') {
             when {
                 expression { params.Options == 'Deploy'}
@@ -19,7 +18,6 @@ pipeline {
                 expression { params.Options == 'Deploy' }
             }
             steps {
-                    
                 dir('enroll_buckets') {
                     sh 'terraform init'
                     sh 'terraform plan -out=plan.tfplan'
