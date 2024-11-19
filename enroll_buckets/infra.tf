@@ -5,15 +5,15 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "terraform-lock-bucket"
-    key    = "lambdabackfills3/terraform.tfstate"
+    key    = "enrollbucketnotifications/terraform.tfstate"
     region = "us-east-1"
     dynamodb_table = "terraform-lock-table"
   }
 }
 
-resource "aws_lambda_function" "update" {
+resource "aws_lambda_function" "backfill" {
   filename      = "lambda_function.zip"
-  function_name = "BackfillDatabaseS3"
+  function_name = "EnrollBucketNotifications"
   role          = "arn:aws:iam::551796573889:role/lambdaAdmin"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.10"

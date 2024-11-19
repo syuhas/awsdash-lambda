@@ -1,0 +1,81 @@
+{
+    "version": "0",
+    "id": "de49fda6-5cb4-5af8-262a-1ca560a0915c",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.s3",
+    "account": "551796573889",
+    "time": "2024-11-18T20: 55: 23Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.10",
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "AROAYA6NDQ3A2E2V67DJR:i-00dd2eb2b07d81e1c",
+            "arn": "arn:aws:sts: : 551796573889:assumed-role/jenkinsAdmin/i-00dd2eb2b07d81e1c",
+            "accountId": "551796573889",
+            "accessKeyId": "ASIAYA6NDQ3ASUCWW6WY",
+            "sessionContext": {
+                "sessionIssuer": {
+                    "type": "Role",
+                    "principalId": "AROAYA6NDQ3A2E2V67DJR",
+                    "arn": "arn:aws:iam: : 551796573889:role/jenkinsAdmin",
+                    "accountId": "551796573889",
+                    "userName": "jenkinsAdmin"
+                },
+                "attributes": {
+                    "creationDate": "2024-11-18T20: 51: 54Z",
+                    "mfaAuthenticated": "false"
+                },
+                "ec2RoleDelivery": "2.0"
+            }
+        },
+        "eventTime": "2024-11-18T20: 55: 23Z",
+        "eventSource": "s3.amazonaws.com",
+        "eventName": "PutObject",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "18.212.85.132",
+        "userAgent": "[APN/1.0 HashiCorp/1.0 Terraform/1.9.8 (+https: //www.terraform.io) aws-sdk-go-v2/1.25.3 os/linux lang/go#1.22.7 md/GOOS#linux md/GOARCH#amd64 api/s3#1.51.4 ft/s3-transfer]",
+        "requestParameters": {
+            "bucketName": "terraform-lock-bucket",
+            "Host": "terraform-lock-bucket.s3.us-east-1.amazonaws.com",
+            "key": "lambdabackfills3/terraform.tfstate",
+            "x-id": "PutObject"
+        },
+        "responseElements": {
+            "x-amz-server-side-encryption": "AES256"
+        },
+        "additionalEventData": {
+            "SignatureVersion": "SigV4",
+            "CipherSuite": "TLS_AES_128_GCM_SHA256",
+            "bytesTransferredIn": 3397,
+            "SSEApplied": "Default_SSE_S3",
+            "AuthenticationMethod": "AuthHeader",
+            "x-amz-id-2": "bEo2Ah18r098FVJeOBPHdKfEph53l0WYWuClHxqQkkDdvDjD51QwyZrhBHKRWY7nKTB8/liVJDE=",
+            "bytesTransferredOut": 0
+        },
+        "requestID": "G8Q2VGE2GHPF2JXS",
+        "eventID": "852cd182-fca0-47ae-bf04-556d0f2c6a11",
+        "readOnly": false,
+        "resources": [
+            {
+                "type": "AWS::S3::Object",
+                "ARN": "arn:aws:s3:::terraform-lock-bucket/lambdabackfills3/terraform.tfstate"
+            },
+            {
+                "accountId": "551796573889",
+                "type": "AWS::S3::Bucket",
+                "ARN": "arn:aws:s3:::terraform-lock-bucket"
+            }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": false,
+        "recipientAccountId": "551796573889",
+        "eventCategory": "Data",
+        "tlsDetails": {
+            "tlsVersion": "TLSv1.3",
+            "cipherSuite": "TLS_AES_128_GCM_SHA256",
+            "clientProvidedHostHeader": "terraform-lock-bucket.s3.us-east-1.amazonaws.com"
+        }
+    }
+}

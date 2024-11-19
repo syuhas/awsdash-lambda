@@ -1,0 +1,61 @@
+{
+    "Name": "newtestbucketfor061039789243",
+    "CreationDate": "datetime.datetime(2024,11,16,20,30,18, tzinfo=tzutc())"
+}
+{
+    "ResponseMetadata": {
+        "RequestId": "09J8BKXR97223GHW",
+        "HostId": "aaIFxItqWF4pulHNMXhArfOnCwTiVmAvgktQGYd83KXCCe5OXUCUmwThMfGUSuZWp+OQtSJKiDc=",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "x-amz-id-2": "aaIFxItqWF4pulHNMXhArfOnCwTiVmAvgktQGYd83KXCCe5OXUCUmwThMfGUSuZWp+OQtSJKiDc=",
+            "x-amz-request-id": "09J8BKXR97223GHW",
+            "date": "Tue,19 Nov 2024 19: 03: 03 GMT",
+            "transfer-encoding": "chunked",
+            "server": "AmazonS3"
+        },
+        "RetryAttempts": 0
+    },
+    "QueueConfigurations": [
+        {
+            "Id": "PutDelete",
+            "QueueArn": "arn:aws:sqs:us-east-1: 551796573889:S3Notifications",
+            "Events": [
+                "s3:ObjectCreated:Put",
+                "s3:ObjectCreated:Post",
+                "s3:ObjectRemoved:Delete",
+                "s3:ObjectRemoved:DeleteMarkerCreated"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": ""
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ""
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
+
+{
+    "ResponseMetadata": {
+        "RequestId": "A2J3KBRAT89D2DTR",
+        "HostId": "k7+6xA6dActdqXc43Nz40lBLVD3MbvH4phnPoSo7ClQQrkVFe3E+52Vy1CcPRoQLqKtxd6wGiapGcwO6uDwhP0doDC+h8AmH",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "x-amz-id-2": "k7+6xA6dActdqXc43Nz40lBLVD3MbvH4phnPoSo7ClQQrkVFe3E+52Vy1CcPRoQLqKtxd6wGiapGcwO6uDwhP0doDC+h8AmH",
+            "x-amz-request-id": "A2J3KBRAT89D2DTR",
+            "date": "Tue, 19 Nov 2024 19:03:05 GMT",
+            "transfer-encoding": "chunked",
+            "server": "AmazonS3"
+        },
+        "RetryAttempts": 0
+    }
+}
