@@ -18,6 +18,8 @@ accounts = [
 ]
 
 def lambda_handler(event, context):
+    logger.info("Event: {}", event)
+    logger.info("Context: {}", context)
     for account in accounts:
         for bucket in getBuckets(account):
             if 'aws-cloudtrail-logs' in bucket['Name']:
