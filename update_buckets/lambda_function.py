@@ -50,17 +50,18 @@ class S3BUCKETOBJECTS(Base):
     costPerMonth = Column(DECIMAL)
 
 def lambda_handler(event, context):
-    logger.info("Event Recieved: {}", event)
-    logger.info("Context: {}", context)
-    # filepath = Path(__file__).resolve().parent / 'create.json'
+    # logger.info("Event Recieved: {}", event)
+    # logger.info("Context: {}", context)
+    # filepath = Path(__file__).resolve().parent / 'tests/delete2.json'
     # with open(filepath, 'r') as file:
     #     event = json.load(file)
 
 
     try:
-        eventName = event['detail']['eventName']
-        bucket_name = event['detail']['requestParameters']['bucketName']
-        account = event['account']
+        for record in event['Records']:
+            eventName = record['body']['detail']['eventName']
+            bucket_name = record['body']['detail']['requestParameters']['bucketName']
+            account = record['body']['account']
 
     except KeyError as e:
         logger.error(e)

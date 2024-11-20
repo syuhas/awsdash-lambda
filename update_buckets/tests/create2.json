@@ -1,0 +1,83 @@
+{
+    "Records": [
+        {
+            "messageId": "41be8cd6-65d9-4808-b00b-6d8fdad8e4fe",
+            "receiptHandle": "AQEB0rui3TGU+E3Qi1Pi2GQ3cDoHgWicxPSwlAlLRefiTdBuK4Sq60y0VoHcpBQvu8NzX7DZfUVQtjdJrm4JA/JnJrzxonFRp3/mozVRPF69HOr2cfCE6gG6KRNjmWrW+qJI74zVu12Y8MnY973lnJhw1MEnnE91qwOcw43Lfl7dhMg0lxrn2W6qtZJGKRHvYJIgJX2ceHptD7tsRzMPcsemrPxGmXXXFl1GGwXm/rye/lPKiMY9s40QkXIKbfJX18OvTJjOKTq6gR4N2QOzQb8xE9iRELNEbTMDN7s+45qc19/wYO7aXCOdMtU5a3ZUL/OSkBwDEODSP3NKc02K4qjlY8HRpwld3BGK/TqYAL9k1uhToYLQ+VT7o72XrwZVqyPXw5sZCsUWkID9Qx1jUm4pRw==",
+            "body": {
+                "version": "0",
+                "id": "46633a2e-df86-f542-e69e-eebdedd673cd",
+                "detail-type": "AWS API Call via CloudTrail",
+                "source": "aws.s3",
+                "account": "551796573889",
+                "time": "2024-11-20T22: 22: 55Z",
+                "region": "us-east-1",
+                "resources": [],
+                "detail": {
+                    "eventVersion": "1.10",
+                    "userIdentity": {
+                        "type": "AssumedRole",
+                        "principalId": "AROAYA6NDQ3A64RCWKGF7:steve@syuhas22gmail.onmicrosoft.com",
+                        "arn": "arn:aws:sts: : 551796573889:assumed-role/AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d/steve@syuhas22gmail.onmicrosoft.com",
+                        "accountId": "551796573889",
+                        "accessKeyId": "ASIAYA6NDQ3AXMDQYJS2",
+                        "sessionContext": {
+                            "sessionIssuer": {
+                                "type": "Role",
+                                "principalId": "AROAYA6NDQ3A64RCWKGF7",
+                                "arn": "arn:aws:iam: : 551796573889:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d",
+                                "accountId": "551796573889",
+                                "userName": "AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d"
+                            },
+                            "attributes": {
+                                "creationDate": "2024-11-20T21: 41: 02Z",
+                                "mfaAuthenticated": "false"
+                            }
+                        }
+                    },
+                    "eventTime": "2024-11-20T22: 22: 55Z",
+                    "eventSource": "s3.amazonaws.com",
+                    "eventName": "CreateBucket",
+                    "awsRegion": "us-east-1",
+                    "sourceIPAddress": "69.251.111.37",
+                    "userAgent": "[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36]",
+                    "requestParameters": {
+                        "bucketName": "jygdkyhfdkjhfgljugyl",
+                        "Host": "s3.amazonaws.com"
+                    },
+                    "responseElements": null,
+                    "additionalEventData": {
+                        "SignatureVersion": "SigV4",
+                        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+                        "bytesTransferredIn": 0,
+                        "AuthenticationMethod": "AuthHeader",
+                        "x-amz-id-2": "s6SThjmeBfbqo2i5NHEf2F2A73lquXe7JXjmcJN9br4xz9Tj8n+y1QeGGVrC5Vj99gtt+opyOU0=",
+                        "bytesTransferredOut": 0
+                    },
+                    "requestID": "29R9EYHCD76T9FM6",
+                    "eventID": "880a3785-0a3f-4617-9d8f-9c79a1169fff",
+                    "readOnly": false,
+                    "eventType": "AwsApiCall",
+                    "managementEvent": true,
+                    "recipientAccountId": "551796573889",
+                    "eventCategory": "Management",
+                    "tlsDetails": {
+                        "tlsVersion": "TLSv1.3",
+                        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                        "clientProvidedHostHeader": "s3.amazonaws.com"
+                    }
+                }
+            },
+            "attributes": {
+                "ApproximateReceiveCount": "1",
+                "SentTimestamp": "1732141379354",
+                "SenderId": "AIDAJXNJGGKNS7OSV23OI",
+                "ApproximateFirstReceiveTimestamp": "1732141379361"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "bb5265e86c0171df1aa19d7a5c877068",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:551796573889:EnrollNewBuckets",
+            "awsRegion": "us-east-1"
+        }
+    ]
+}
