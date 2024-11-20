@@ -52,16 +52,29 @@ class S3BUCKETOBJECTS(Base):
 def lambda_handler(event, context):
     logger.info("Event Recieved: {}", event)
     logger.info("Context: {}", context)
-    # filepath = Path(__file__).resolve().parent / 'tests/delete2.json'
+    # filepath = Path(__file__).resolve().parent / 'tests/create3.json'
     # with open(filepath, 'r') as file:
     #     event = json.load(file)
 
 
     try:
         for record in event['Records']:
-            eventName = record['body']['detail']['eventName']
-            bucket_name = record['body']['detail']['requestParameters']['bucketName']
-            account = record['body']['account']
+            body = json.loads(record['body'])
+            eventName = body['detail']['eventName']
+            bucket_name = body['detail']['requestParameters']['bucketName']
+            account = body['account']
+
+
+        if eventName == 'CreateBucket':
+            logger.info("Bucket created: {}. Adding to database", bucket_name)
+            addBucketToDatabase(bucket_name, account)
+            logger.info("Bucket {} added to database", bucket_name)
+            enrollAllBucketEventNotifications()
+
+        if eventName == 'DeleteBucket':
+            logger.info("Bucket deleted: {}. Removing from database", bucket_name)
+            deleteBucketsandObjectsFromDatabase(bucket_name)
+            logger.info("Bucket {} removed from database", bucket_name)
 
     except KeyError as e:
         logger.error(e)
@@ -69,17 +82,6 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps('Error parsing event')
         }
-
-    if eventName == 'CreateBucket':
-        logger.info("Bucket created: {}. Adding to database", bucket_name)
-        addBucketToDatabase(bucket_name, account)
-        logger.info("Bucket {} added to database", bucket_name)
-        enrollAllBucketEventNotifications()
-
-    if eventName == 'DeleteBucket':
-        logger.info("Bucket deleted: {}. Removing from database", bucket_name)
-        deleteBucketsandObjectsFromDatabase(bucket_name)
-        logger.info("Bucket {} removed from database", bucket_name)
 
 
 

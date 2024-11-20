@@ -49,13 +49,12 @@ def lambda_handler(event, context):
     logger.info('Event Recieved: {}', event)
     logger.info("Context: {}", context)
 
-    filepath = Path(__file__).resolve().parent / 'delete.json'
-    with open(filepath, 'r') as file:
-        event = json.load(file)
+    # filepath = Path(__file__).resolve().parent / 'delete.json'
+    # with open(filepath, 'r') as file:
+    #     event = json.load(file)
 
-    
-    for record in event['Records']:
-        try:
+    try:
+        for record in event['Records']:
             eventName = record['eventName']
             bucket_name = record['s3']['bucket']['name']
             key = record['s3']['object']['key']
@@ -69,12 +68,12 @@ def lambda_handler(event, context):
                 deleteObject(bucket_name, key)
         
         
-        except KeyError as e:
-            logger.exception(e)
-            return {
-                'statusCode': 400,
-                'body': json.dumps('Could not process event.')
-            }
+    except KeyError as e:
+        logger.exception(e)
+        return {
+            'statusCode': 400,
+            'body': json.dumps('Could not process event.')
+        }
 
 
 
