@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         logger.info("Bucket created: {}. Adding to database", bucket_name)
         addBucketToDatabase(bucket_name, account)
         logger.info("Bucket {} added to database", bucket_name)
-        # enrollAllBucketEventNotifications()
+        enrollAllBucketEventNotifications()
 
     if eventName == 'DeleteBucket':
         logger.info("Bucket deleted: {}. Removing from database", bucket_name)
