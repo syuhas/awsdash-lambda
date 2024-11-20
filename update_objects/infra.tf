@@ -11,7 +11,7 @@ terraform {
   }
 }
 
-resource "aws_lambda_function" "update" {
+resource "aws_lambda_function" "update_objects" {
   filename      = "lambda_function.zip"
   function_name = "ObjectManagerS3"
   role          = "arn:aws:iam::551796573889:role/lambdaAdmin"

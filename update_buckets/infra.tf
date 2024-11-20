@@ -11,7 +11,7 @@ terraform {
   }
 }
 
-resource "aws_lambda_function" "backfill" {
+resource "aws_lambda_function" "update_buckets" {
   filename      = "lambda_function.zip"
   function_name = "BucketManagerS3"
   role          = "arn:aws:iam::551796573889:role/lambdaAdmin"
