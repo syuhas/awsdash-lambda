@@ -1,0 +1,37 @@
+{
+    "Records": [
+        {
+            "eventVersion": "2.1",
+            "eventSource": "aws:s3",
+            "awsRegion": "us-east-1",
+            "eventTime": "2024-11-20T00:49:13.027Z",
+            "eventName": "ObjectRemoved:Delete",
+            "userIdentity": {
+                "principalId": "AWS:AROAYA6NDQ3A64RCWKGF7:steve@syuhas22gmail.onmicrosoft.com"
+            },
+            "requestParameters": {
+                "sourceIPAddress": "69.251.111.37"
+            },
+            "responseElements": {
+                "x-amz-request-id": "88MQ91CMGX2F6RGP",
+                "x-amz-id-2": "hcZxvHshvUPsE5MuqfcjgjvNmxWOJXQ1U8htkTyRIKua52ZDgKKI0ljn76VsEo3XHZ+L/d+plBMbxO8D2sPcUtpS20GIH1pM"
+            },
+            "s3": {
+                "s3SchemaVersion": "1.0",
+                "configurationId": "ODE2MWZlZDgtMTYyYS00YjFkLTg5OGItYzQ4ZjdiOTYyYTZm",
+                "bucket": {
+                    "name": "digitalsteve.net",
+                    "ownerIdentity": {
+                        "principalId": "AIYDUTWHXT3F1"
+                    },
+                    "arn": "arn:aws:s3:::digitalsteve.net"
+                },
+                "object": {
+                    "key": "index.html",
+                    "versionId": "D7RmxJPRQ2CSmBGtjRAUnp_JjWH.w56l",
+                    "sequencer": "00673D32090516FF58"
+                }
+            }
+        }
+    ]
+}

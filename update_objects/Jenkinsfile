@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     stages {
+
         stage('Package') {
             when {
                 expression { params.Options == 'Deploy'}
             }
             steps {
-                dir('enroll_buckets') {
+                dir('update_objects') {
                     sh 'bash package.sh'
                 }
             }
@@ -18,7 +19,8 @@ pipeline {
                 expression { params.Options == 'Deploy' }
             }
             steps {
-                dir('enroll_buckets') {
+                    
+                dir('update_objects') {
                     sh 'terraform init'
                     sh 'terraform plan -out=plan.tfplan'
                     sh 'terraform apply -auto-approve plan.tfplan'
@@ -32,7 +34,7 @@ pipeline {
                 expression { params.Options == 'Destroy' }
             }
             steps {
-                dir('enroll_buckets') {
+                dir('update_objects') {
                     sh 'terraform init'
                     sh 'terraform destroy -auto-approve'
                 }

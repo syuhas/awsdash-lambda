@@ -1,0 +1,71 @@
+{
+    "version": "0",
+    "id": "2482dc66-dce0-0b55-3a25-6a34adb83de1",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.s3",
+    "account": "551796573889",
+    "time": "2024-11-20T13:29:22Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.10",
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "AROAYA6NDQ3A64RCWKGF7:steve@syuhas22gmail.onmicrosoft.com",
+            "arn": "arn:aws:sts::551796573889:assumed-role/AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d/steve@syuhas22gmail.onmicrosoft.com",
+            "accountId": "551796573889",
+            "accessKeyId": "ASIAYA6NDQ3AQNOTO5NP",
+            "sessionContext": {
+                "sessionIssuer": {
+                    "type": "Role",
+                    "principalId": "AROAYA6NDQ3A64RCWKGF7",
+                    "arn": "arn:aws:iam::551796573889:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d",
+                    "accountId": "551796573889",
+                    "userName": "AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d"
+                },
+                "attributes": {
+                    "creationDate": "2024-11-20T05:26:22Z",
+                    "mfaAuthenticated": "false"
+                }
+            }
+        },
+        "eventTime": "2024-11-20T13:29:22Z",
+        "eventSource": "s3.amazonaws.com",
+        "eventName": "DeleteBucket",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "69.251.111.37",
+        "userAgent": "[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36]",
+        "requestParameters": {
+            "bucketName": "asdfasdgasdfgsdgdf",
+            "Host": "s3.amazonaws.com"
+        },
+        "responseElements": null,
+        "additionalEventData": {
+            "SignatureVersion": "SigV4",
+            "CipherSuite": "TLS_AES_128_GCM_SHA256",
+            "bytesTransferredIn": 0,
+            "AuthenticationMethod": "AuthHeader",
+            "x-amz-id-2": "61FLCQiMnYsxccjD3k85Dq+joUXlCDWfmValLGg3lyugxXXZmtmAKOz4PfnMvd/bifuWSJ7zPEMoGcdddbZGi3GfJxUO4jFA",
+            "bytesTransferredOut": 0
+        },
+        "requestID": "CPY9X4MY4K0MNCV0",
+        "eventID": "f25f6e36-944f-4933-8659-b97b7fb8e347",
+        "readOnly": false,
+        "resources": [
+            {
+                "accountId": "551796573889",
+                "type": "AWS::S3::Bucket",
+                "ARN": "arn:aws:s3:::asdfasdgasdfgsdgdf"
+            }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "551796573889",
+        "eventCategory": "Management",
+        "tlsDetails": {
+            "tlsVersion": "TLSv1.3",
+            "cipherSuite": "TLS_AES_128_GCM_SHA256",
+            "clientProvidedHostHeader": "s3.amazonaws.com"
+        }
+    }
+}

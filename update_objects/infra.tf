@@ -5,7 +5,7 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "terraform-lock-bucket"
-    key    = "lambdabackfills3/terraform.tfstate"
+    key    = "objectmanagers3/terraform.tfstate"
     region = "us-east-1"
     dynamodb_table = "terraform-lock-table"
   }
@@ -13,7 +13,7 @@ terraform {
 
 resource "aws_lambda_function" "update" {
   filename      = "lambda_function.zip"
-  function_name = "BackfillDatabaseS3"
+  function_name = "ObjectManagerS3"
   role          = "arn:aws:iam::551796573889:role/lambdaAdmin"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.10"

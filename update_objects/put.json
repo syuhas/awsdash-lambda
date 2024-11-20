@@ -1,0 +1,39 @@
+{
+    "Records": [
+        {
+            "eventVersion": "2.1",
+            "eventSource": "aws:s3",
+            "awsRegion": "us-east-1",
+            "eventTime": "2024-11-20T01:27:21.297Z",
+            "eventName": "ObjectCreated:Put",
+            "userIdentity": {
+                "principalId": "AWS:AROAYA6NDQ3A64RCWKGF7:steve@syuhas22gmail.onmicrosoft.com"
+            },
+            "requestParameters": {
+                "sourceIPAddress": "69.251.111.37"
+            },
+            "responseElements": {
+                "x-amz-request-id": "R5VSYBVB0A7N6RR3",
+                "x-amz-id-2": "dR93gKEfZxshhkDBstT4rmUw02i34uW+dUU4o863XQb6JEAfzbYV56l56eBC4KVaDE7XCVtoWNQSkP2b7LjlV5cdOdAMgQ8dBjhjLojm/ac="
+            },
+            "s3": {
+                "s3SchemaVersion": "1.0",
+                "configurationId": "ODE2MWZlZDgtMTYyYS00YjFkLTg5OGItYzQ4ZjdiOTYyYTZm",
+                "bucket": {
+                    "name": "digitalsteve.net",
+                    "ownerIdentity": {
+                        "principalId": "AIYDUTWHXT3F1"
+                    },
+                    "arn": "arn:aws:s3:::digitalsteve.net"
+                },
+                "object": {
+                    "key": "index.html",
+                    "size": 7618,
+                    "eTag": "b222939c769d2cd8e8e51397f21cb656",
+                    "versionId": "pVNWDgr.fcehA.uaVJ3D5LQx0hFib3_b",
+                    "sequencer": "00673D3AF93AE19586"
+                }
+            }
+        }
+    ]
+}

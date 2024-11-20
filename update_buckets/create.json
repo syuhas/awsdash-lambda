@@ -1,10 +1,10 @@
 {
     "version": "0",
-    "id": "f8c4aea1-1575-36b1-fd7b-e104ec6176a3",
+    "id": "a42984e1-9b59-a4ce-5737-226e0d1a5409",
     "detail-type": "AWS API Call via CloudTrail",
     "source": "aws.s3",
     "account": "551796573889",
-    "time": "2024-11-19T17:50:05Z",
+    "time": "2024-11-20T13:21:14Z",
     "region": "us-east-1",
     "resources": [],
     "detail": {
@@ -14,7 +14,7 @@
             "principalId": "AROAYA6NDQ3A64RCWKGF7:steve@syuhas22gmail.onmicrosoft.com",
             "arn": "arn:aws:sts::551796573889:assumed-role/AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d/steve@syuhas22gmail.onmicrosoft.com",
             "accountId": "551796573889",
-            "accessKeyId": "ASIAYA6NDQ3ASHVEKNXZ",
+            "accessKeyId": "ASIAYA6NDQ3AQNOTO5NP",
             "sessionContext": {
                 "sessionIssuer": {
                     "type": "Role",
@@ -24,21 +24,20 @@
                     "userName": "AWSReservedSSO_RegionalAdmin_b2ddddf2b9e7958d"
                 },
                 "attributes": {
-                    "creationDate": "2024-11-19T17:00:52Z",
+                    "creationDate": "2024-11-20T05:26:22Z",
                     "mfaAuthenticated": "false"
                 }
             }
         },
-        "eventTime": "2024-11-19T17:50:05Z",
+        "eventTime": "2024-11-20T13:21:14Z",
         "eventSource": "s3.amazonaws.com",
-        "eventName": "DeleteObjects",
+        "eventName": "CreateBucket",
         "awsRegion": "us-east-1",
         "sourceIPAddress": "69.251.111.37",
         "userAgent": "[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36]",
         "requestParameters": {
-            "bucketName": "localdownloads",
-            "Host": "s3.amazonaws.com",
-            "delete": ""
+            "bucketName": "asdfasdgasdfgsdgdf",
+            "Host": "s3.amazonaws.com"
         },
         "responseElements": null,
         "additionalEventData": {
@@ -46,27 +45,16 @@
             "CipherSuite": "TLS_AES_128_GCM_SHA256",
             "bytesTransferredIn": 0,
             "AuthenticationMethod": "AuthHeader",
-            "x-amz-id-2": "y7v3hsJZJUvh/939v/0Hfd/hnybLx97xV32Sv1Xz7QqiOxZCCT4u5KlRUxrgkt1yokjNN+GZGFI=",
+            "x-amz-id-2": "W7jDQQnrAWL3fbntYcFyOia15dY8z8Pex9qqlc8rRodx0RebXvh9dvWzNR6SHEgpe9F/DfCc5Vk=",
             "bytesTransferredOut": 0
         },
-        "requestID": "S285B9AB2FF8GR6A",
-        "eventID": "f8060f67-d42e-4566-9e46-f549a05d667f",
+        "requestID": "3P88P333B01JZA98",
+        "eventID": "059a2880-e1cf-44ed-b7dd-077b3387a124",
         "readOnly": false,
-        "resources": [
-            {
-                "type": "AWS::S3::Object",
-                "ARNPrefix": "arn:aws:s3:::localdownloads/"
-            },
-            {
-                "accountId": "551796573889",
-                "type": "AWS::S3::Bucket",
-                "ARN": "arn:aws:s3:::localdownloads"
-            }
-        ],
         "eventType": "AwsApiCall",
-        "managementEvent": false,
+        "managementEvent": true,
         "recipientAccountId": "551796573889",
-        "eventCategory": "Data",
+        "eventCategory": "Management",
         "tlsDetails": {
             "tlsVersion": "TLSv1.3",
             "cipherSuite": "TLS_AES_128_GCM_SHA256",
