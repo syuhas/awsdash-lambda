@@ -59,8 +59,8 @@ def lambda_handler(event, context):
 
     try:
         for record in event['Records']:
-            # body = json.loads(record['body'])
-            body = record['body']
+            body = json.loads(record['body'])
+            # body = record['body']
             eventName = body['detail']['eventName']
             bucket_name = body['detail']['requestParameters']['bucketName']
             account_id = body['account']
