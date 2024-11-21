@@ -7,20 +7,20 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, BigInteger
 from botocore.exceptions import ClientError
 from pathlib import Path
 
-accounts = [
-    {
+accounts = {
+    '551796573889': {
         'account_id': '551796573889',
         'region': 'us-east-1',
         'role_arn': 'arn:aws:iam::551796573889:role/jenkinsAdminXacnt',
         'queue_arn': 'arn:aws:sqs:us-east-1:551796573889:S3Notifications'
     },
-    {
+    '061039789243': {
         'account_id': '061039789243',
         'region': 'us-east-1',
         'role_arn': 'arn:aws:iam::061039789243:role/jenkinsAdminXacnt',
         'queue_arn': 'arn:aws:sqs:us-east-1:551796573889:S3Notifications'
     }
-]
+}
 
 Base = declarative_base()
 class S3BUCKETS(Base):
@@ -52,29 +52,33 @@ class S3BUCKETOBJECTS(Base):
 def lambda_handler(event, context):
     logger.info("Event Recieved: {}", event)
     logger.info("Context: {}", context)
-    # filepath = Path(__file__).resolve().parent / 'tests/create3.json'
-    # with open(filepath, 'r') as file:
-    #     event = json.load(file)
+    filepath = Path(__file__).resolve().parent / 'tests/delete2.json'
+    with open(filepath, 'r') as file:
+        event = json.load(file)
 
 
     try:
         for record in event['Records']:
-            body = json.loads(record['body'])
+            # body = json.loads(record['body'])
+            body = record['body']
             eventName = body['detail']['eventName']
             bucket_name = body['detail']['requestParameters']['bucketName']
-            account = body['account']
+            account_id = body['account']
 
+            print(body)
+            print(eventName)
+            print(bucket_name)
+            print(account_id)
 
-        if eventName == 'CreateBucket':
-            logger.info("Bucket created: {}. Adding to database", bucket_name)
-            addBucketToDatabase(bucket_name, account)
-            logger.info("Bucket {} added to database", bucket_name)
-            enrollAllBucketEventNotifications()
+            if eventName == 'CreateBucket':
+                logger.info("Bucket created: {}. Adding to database", bucket_name)
+                addBucketToDatabase(bucket_name, account_id)
+                logger.info("Bucket {} added to database", bucket_name)
+                enrollBucketEventNotifications(bucket_name, accounts[account_id])
 
-        if eventName == 'DeleteBucket':
-            logger.info("Bucket deleted: {}. Removing from database", bucket_name)
-            deleteBucketsandObjectsFromDatabase(bucket_name)
-            logger.info("Bucket {} removed from database", bucket_name)
+            if eventName == 'DeleteBucket':
+                logger.info("Bucket deleted from S3: {}. Removing from database", bucket_name)
+                deleteBucketsandObjectsFromDatabase(bucket_name)
 
     except KeyError as e:
         logger.error(e)
@@ -105,31 +109,38 @@ def deleteBucketsandObjectsFromDatabase(bucket_name: str):
 
     objects = db.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket == bucket_name).all()
     if objects:
+        logger.info("Objects found for bucket {}. Cleaning up objects first.", bucket_name)
         for obj in objects:
             db.delete(obj)
+            logger.info("Object {} deleted from database {}", obj.key, bucket_name)
+        logger.info("Objects deleted. Deleting bucket.")
+    else:
+        logger.info("No objects found. Deleting bucket.")
 
     bucket = db.query(S3BUCKETS).filter(S3BUCKETS.bucket == bucket_name).first()
     if bucket:
+        logger.info("Bucket {} found. Deleting from database.", bucket_name)
         db.delete(bucket)
         db.commit()
+        db.close()
+        logger.info("Bucket {} deleted from database.", bucket_name)
+    else:
+        logger.info("Bucket {} not found in database. Nothing to delete.", bucket_name)
 
-def enrollAllBucketEventNotifications():
-    for account in accounts:
-        for bucket in getBuckets(account):
-            if 'aws-cloudtrail-logs' in bucket['Name']:
-                print(f"Skipping {bucket['Name']}")
-                continue
-            else:
-                response = checkBucketConfigurationExists(account, bucket['Name'])
-                if 'QueueConfigurations' not in response:
-                    logger.info("Enrolling bucket {} in account {}", bucket['Name'], account['account_id'])
-                    try:
-                        enrollBucketNotifications(account, bucket['Name'])
-                        logger.info("Bucket {} enrolled in account {}", bucket['Name'], account['account_id'])
-                    except Exception as e:
-                        logger.error("Error enrolling bucket {} in account {}: {}", bucket['Name'], account['account_id'], e)
-                else:
-                    print(f"Bucket {bucket['Name']} already has notifications enabled")
+def enrollBucketEventNotifications(bucket_name: str, account: dict):
+    try:
+        response = checkBucketConfigurationExists(account, bucket_name)
+        if 'QueueConfigurations' not in response:
+            logger.info("Enrolling bucket {} in account {}", bucket_name, account['account_id'])
+            try:
+                enrollBucketNotifications(account, bucket_name)
+                logger.info("Bucket {} enrolled in account {}", bucket_name, account['account_id'])
+            except Exception as e:
+                logger.error("Error enrolling bucket {} in account {}: {}", bucket_name, account['account_id'], e)
+        else:
+            print(f"Bucket {bucket_name} already has notifications enabled")
+    except Exception as e:
+        logger.error("Error enrolling bucket {} in account {}: {}", bucket_name, account['account_id'], e)
             
 
 
@@ -148,10 +159,10 @@ def enrollBucketNotifications(account: dict, bucket: dict):
         }
     )
 
-def checkBucketConfigurationExists(account: str, bucket: dict):
+def checkBucketConfigurationExists(account: str, bucket_name: str):
     session = getAccountSession(account)
     s3 = session.client('s3')
-    response = s3.get_bucket_notification_configuration(Bucket=bucket)
+    response = s3.get_bucket_notification_configuration(Bucket=bucket_name)
     return response
 
 def getBuckets(account):

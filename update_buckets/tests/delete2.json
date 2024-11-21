@@ -41,7 +41,7 @@
                     "sourceIPAddress": "69.251.111.37",
                     "userAgent": "[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36]",
                     "requestParameters": {
-                        "bucketName": "jygdkyhfdkjhfgljugyl",
+                        "bucketName": "dfakjgfkasjdlhfgk",
                         "Host": "s3.amazonaws.com"
                     },
                     "responseElements": null,
@@ -60,7 +60,7 @@
                         {
                             "accountId": "551796573889",
                             "type": "AWS: :S3: :Bucket",
-                            "ARN": "arn:aws:s3: : :jygdkyhfdkjhfgljugyl"
+                            "ARN": "arn:aws:s3: : :dfakjgfkasjdlhfgk"
                         }
                     ],
                     "eventType": "AwsApiCall",
