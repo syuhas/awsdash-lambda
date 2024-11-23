@@ -1,0 +1,42 @@
+{
+    "bucket": "terraform-lock-bucket-dev",
+    "totalSizeBytes": 721,
+    "totalSizeKb": 0.72,
+    "totalSizeMb": 0.0,
+    "totalSizeGb": 0.0,
+    "costPerMonth": 0.0,
+    "objects": [
+        {
+            "key": "php.dev.digitalsteve.net/terraform.tfstate",
+            "sizeBytes": 180,
+            "sizeKb": 0.18,
+            "sizeMb": 0.0,
+            "sizeGb": 0.0,
+            "costPerMonth": 0.0
+        },
+        {
+            "key": "poop.dev.digitalsteve.net/terraform.tfstate",
+            "sizeBytes": 180,
+            "sizeKb": 0.18,
+            "sizeMb": 0.0,
+            "sizeGb": 0.0,
+            "costPerMonth": 0.0
+        },
+        {
+            "key": "test.dev.digitalsteve.net/terraform.tfstate",
+            "sizeBytes": 181,
+            "sizeKb": 0.18,
+            "sizeMb": 0.0,
+            "sizeGb": 0.0,
+            "costPerMonth": 0.0
+        },
+        {
+            "key": "v2.dev.digitalsteve.net/terraform.tfstate",
+            "sizeBytes": 180,
+            "sizeKb": 0.18,
+            "sizeMb": 0.0,
+            "sizeGb": 0.0,
+            "costPerMonth": 0.0
+        }
+    ]
+}

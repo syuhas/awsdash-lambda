@@ -21,15 +21,6 @@ accounts = [
     }
 ]
 
-def lambda_handler(event, context):
-    print(event)
-    logger.info("Retrieving existing buckets...")
-    for account in accounts:
-        session = getAccountSession(account)
-        buckets = getBucketsData(session)
-        response = backfillDatabase(buckets, account['account_id'])
-        logger.info(response)
-
 Base = declarative_base()
 class S3BUCKETS(Base):
     __tablename__ = 's3'
@@ -57,6 +48,14 @@ class S3BUCKETOBJECTS(Base):
     sizeGb = Column(DECIMAL)
     costPerMonth = Column(DECIMAL)
 
+def lambda_handler(event, context):
+    print(event)
+    logger.info("Retrieving existing buckets...")
+    for account in accounts:
+        session = getAccountSession(account)
+        buckets = getBucketsData(session)
+        response = backfillDatabase(buckets, account['account_id'])
+        logger.info(response)
 
 
 def backfillDatabase(buckets: list, account_id: str) -> dict:
@@ -100,7 +99,7 @@ def backfillDatabase(buckets: list, account_id: str) -> dict:
                 logger.info(f"{account_id}: Bucket {bucket_name} not found in AWS. Deleting from database...")
                 deleteBucket(session, bucket_data)
 
-            session.commit()
+        session.commit()
         session.close()
         return {
             'statusCode': 200,
@@ -228,19 +227,21 @@ def getBucketsData(session: boto3.session.Session):
             'objects': []
         }
         objects = s3.list_objects_v2(Bucket=bucket['Name'])
+        
         object_list = []
         total_bucket_cost = 0
-        for obj in objects['Contents']:
-            object_dict = {
-                'key': obj['Key'],
-                'sizeBytes': obj['Size'],
-                'sizeKb': round(obj['Size'] / 1024, 2),  # Converts bytes to KB
-                'sizeMb': round(obj['Size'] / (1024 * 1024), 2),  # Converts bytes to MB
-                'sizeGb': round(obj['Size'] / (1024 * 1024 * 1024), 4),  # Converts bytes to GB
-            }
-            object_dict['costPerMonth'] = object_dict['sizeGb'] * 0.023
-            total_bucket_cost = total_bucket_cost + object_dict['costPerMonth']
-            object_list.append(object_dict)
+        if 'Contents' in objects:
+            for obj in objects['Contents']:
+                object_dict = {
+                    'key': obj['Key'],
+                    'sizeBytes': obj['Size'],
+                    'sizeKb': round(obj['Size'] / 1024, 2),  # Converts bytes to KB
+                    'sizeMb': round(obj['Size'] / (1024 * 1024), 2),  # Converts bytes to MB
+                    'sizeGb': round(obj['Size'] / (1024 * 1024 * 1024), 4),  # Converts bytes to GB
+                }
+                object_dict['costPerMonth'] = object_dict['sizeGb'] * 0.023
+                total_bucket_cost = total_bucket_cost + object_dict['costPerMonth']
+                object_list.append(object_dict)
         bucket_dict['totalSizeBytes'] = sum([obj['sizeBytes'] for obj in object_list])
         bucket_dict['totalSizeKb'] = round(sum([obj['sizeKb'] for obj in object_list]), 4)
         bucket_dict['totalSizeMb'] = round(sum([obj['sizeMb'] for obj in object_list]), 4)
@@ -295,3 +296,6 @@ def getObjectsForBucket(bucket_id: int) -> list:
     result = session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket_id == bucket_id).all()
     session.close()
     return result
+
+if __name__ == '__main__':
+    lambda_handler(None, None)
