@@ -1,12 +1,16 @@
+from typing import List, Dict, Union
 import boto3
 import json
+import boto3.session
 from loguru import logger
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, BigInteger
 from botocore.exceptions import ClientError
+from concurrent.futures import ThreadPoolExecutor
+import time
 
-accounts = [
+account_lookup = [
     {
         'sdlc': 'prod',
         'account_id': '551796573889',
@@ -49,93 +53,170 @@ class S3BUCKETOBJECTS(Base):
     costPerMonth = Column(DECIMAL)
 
 def lambda_handler(event, context):
-    print(event)
-    logger.info("Retrieving existing buckets...")
-    for account in accounts:
+    logger.info("Starting backfill process...")
+    start_time = time.time()
+
+    for account in account_lookup:
+
+
+        logger.info("Retrieving existing buckets for {}...", account['account_id'])
+
         session = getAccountSession(account)
+
         buckets = getBucketsData(session)
-        response = backfillDatabase(buckets, account['account_id'])
-        logger.info(response)
+
+        logger.info("Backfilling database for {}...", account['account_id'])
+
+        backfillDatabase(buckets, account['account_id'])
+    
+    end_time = time.time()
+
+    logger.info(f"Execution time: {end_time - start_time} seconds")
 
 
-def backfillDatabase(buckets: list, account_id: str) -> dict:
+def backfillDatabase(buckets: List[dict], account_id: str) -> dict:
     try:
-        existing_buckets = {bucket.bucket: bucket for bucket in getBuckets(account_id)}
+        current_keys = set()
         session = getDatabaseSession()
+        existing_db_buckets = {b.bucket: b.id for b in session.query(S3BUCKETS).filter(S3BUCKETS.account_id == account_id).all()}
+        existing_db_objects = {(obj.bucket_id, obj.key): {
+                                    "id": obj.id,
+                                    "hash": hash((obj.sizeBytes, obj.costPerMonth))
+        } for obj in session.query(S3BUCKETOBJECTS).join(S3BUCKETS, S3BUCKETS.id == S3BUCKETOBJECTS.bucket_id).filter(S3BUCKETS.account_id == account_id).all()}
 
-        for bucket_data in buckets:
-            bucket_name = bucket_data['bucket']
-            if bucket_name in existing_buckets:
-                s3_bucket = existing_buckets[bucket_name]
-                if bucket_data['totalSizeBytes'] != s3_bucket.totalSizeBytes:
-                    s3_bucket = modifyBucket(session, s3_bucket.id, bucket_data)
-                else:
-                    logger.info(f"{account_id}: Bucket {bucket_name} already exists. Skipping adding it to the database...")
-            else:
-                s3_bucket = addBucket(session, bucket_data, account_id)
+        try:
+            with ThreadPoolExecutor() as executor:
+                futures = [
+                    executor.submit(processBucket, session, bucket, existing_db_buckets, existing_db_objects, account_id, current_keys) for bucket in buckets
+                ]
+                for future in futures:
+                    future.result()
 
-            logger.info(f"Retrieving existing objects for bucket {bucket_name}...")
-            existing_objects = {obj.key: obj for obj in getObjectsForBucket(s3_bucket.id)}
-            for obj in bucket_data['objects']:
-                obj_key = obj['key']
-                if obj_key in existing_objects:
-                    existing_object = existing_objects[obj_key]
-                    if obj['sizeBytes'] != existing_object.sizeBytes:
-                        modifyObject(session, obj, obj_key)
-                        logger.info(f"{account_id}: Object {obj_key} modified in the database.")
-                    else:
-                        # logger.info(f"{account_id}: Object {obj_key} already exists for bucket {bucket_name}. Skipping...")
-                        continue
-                else:
-                    addObject(session, s3_bucket, obj, bucket_name)
+            current_buckets = {bucket['bucket'] for bucket in buckets}
+             
+        except Exception as e:
+            logger.exception(e)
+            session.rollback()
+            return {
+                'statusCode': 500,
+                'body': json.dumps(f'An error occurred: {e}')
+            }
+            
+        
+        objects_to_delete = set(existing_db_objects.keys()) - current_keys
+        buckets_to_delete = set(existing_db_buckets.keys()) - current_buckets
+        for obj in objects_to_delete:
+            logger.info(f'Deleting object from database {obj}')
+            deleteObject(session, existing_db_objects[obj])
+        for bucket in buckets_to_delete:
+            logger.info(f'Deleting bucket from database {bucket}')
+            deleteBucket(session, existing_db_buckets[bucket])
 
-            for obj_key, obj in existing_objects.items():
-                if obj_key not in [object['key'] for object in bucket_data['objects']]:
-                    logger.info(f"{account_id}: Object {obj_key} not found in AWS. Deleting from database...")
-                    deleteObject(session, obj)
-
-        for bucket_name, bucket_data in existing_buckets.items():
-            if bucket_name not in [bucket['bucket'] for bucket in buckets]:
-                logger.info(f"{account_id}: Bucket {bucket_name} not found in AWS. Deleting from database...")
-                deleteBucket(session, bucket_data)
-
-        session.commit()
-        session.close()
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Operation Complete')
-        }
     except Exception as e:
-        logger.exception(e)
+        session.rollback()
         return {
             'statusCode': 500,
-            'body': json.dumps('An error occurred')
+            'body': json.dumps(f'An error occurred: {e}')
         }
-    
+    finally:
+        session.commit()
+        session.close()
 
 
-def addBucket(session: sessionmaker, bucket: dict, account_id: str):
-    bucket_name = bucket['bucket']
-    
-    s3_bucket = S3BUCKETS(
+
+def processBucket(session: sessionmaker, bucket: Dict, existing_db_buckets: Dict, existing_db_objects: Dict, account_id: str, current_keys: set) -> None:
+    bucket_id = existing_db_buckets.get(bucket['bucket'])
+    try:
+        if bucket_id:
+            logger.info(f'Bucket {bucket["bucket"]} already exists in the database.')
+            if bucketNeedsUpdate(session, bucket_id, bucket, account_id):
+                modifyBucket(session, bucket_id, bucket, account_id)
+                logger.info(f'Bucket {bucket["bucket"]} updated.')
+        else:
+            logger.info(f'Adding bucket {bucket["bucket"]} to the database.')
+            bucket_id = addBucket(session, bucket, account_id)
+
+        for obj in bucket['objects']:
+            object_key = (bucket_id, obj['key'])
+            if object_key in existing_db_objects:
+                logger.info(f'{obj["key"]} exists in the database.')
+                existing_object = existing_db_objects[object_key]
+                if objectNeedsUpdate(existing_object, obj):
+                    modifyObject(session, existing_object['id'], obj)
+
+            else:
+                logger.info(f'Adding object {obj["key"]} to the database.')
+                addObject(session, bucket_id, obj)
+
+            current_keys |= ({(bucket_id, obj['key'])})
+
+    except Exception as e:
+        logger.exception(e)
+
+
+
+
+#################################### Helper Functions for Buckets ##################################################
+
+def bucketNeedsUpdate(session, bucket_id: int, bucket: Dict, account_id: str) -> bool:
+    existing_bucket = session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_id).one()
+    return (
+        existing_bucket.account_id != account_id or
+        existing_bucket.totalSizeBytes != bucket['totalSizeBytes'] or
+        existing_bucket.totalSizeKb != bucket['totalSizeKb'] or
+        existing_bucket.totalSizeMb != bucket['totalSizeMb'] or
+        existing_bucket.totalSizeGb != bucket['totalSizeGb'] or
+        existing_bucket.costPerMonth != bucket['costPerMonth']
+    )
+
+def modifyBucket(session, bucket_id: int, bucket: Dict, account_id: str) -> None:
+    session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_id).update({
+        "account_id": account_id,
+        "totalSizeBytes": bucket["totalSizeBytes"],
+        "totalSizeKb": bucket["totalSizeKb"],
+        "totalSizeMb": bucket["totalSizeMb"],
+        "totalSizeGb": bucket["totalSizeGb"],
+        "costPerMonth": bucket["costPerMonth"],
+    })
+
+
+def addBucket(session: sessionmaker, bucket: Dict, account_id: str) -> str:
+    new_bucket = S3BUCKETS(
         account_id=account_id,
-        bucket=bucket_name,
+        bucket=bucket['bucket'],
         totalSizeBytes=bucket['totalSizeBytes'],
         totalSizeKb=bucket['totalSizeKb'],
         totalSizeMb=bucket['totalSizeMb'],
         totalSizeGb=bucket['totalSizeGb'],
         costPerMonth=bucket['costPerMonth']
     )
-    session.add(s3_bucket)
-    session.commit()
-    logger.info(f"Added new bucket {bucket_name} to the database.")
-    session.refresh(s3_bucket)
-    return s3_bucket
+    session.add(new_bucket)
+    return new_bucket.id
 
-def addObject(session: sessionmaker, s3_bucket: dict, obj: dict, bucket_name: str):
-    s3_object = S3BUCKETOBJECTS(
-        bucket_id=s3_bucket.id,
-        bucket=bucket_name,
+def deleteBucket(session: sessionmaker, bucket_id: int) -> None:
+    session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket_id == bucket_id).delete()
+    session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_id).delete()
+
+##################################### Helper Functions for Objects #################################################
+
+def objectNeedsUpdate(existing_object, object: Dict) -> bool:
+    return (
+        existing_object['hash'] != object['hash']
+    )
+
+def modifyObject(session: sessionmaker, object_id: int, object: Dict) -> None:
+    session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.id == object_id).update({
+        "sizeBytes": object["sizeBytes"],
+        "sizeKb": object["sizeKb"],
+        "sizeMb": object["sizeMb"],
+        "sizeGb": object["sizeGb"],
+        "costPerMonth": object["costPerMonth"]
+    })
+
+def addObject(session: sessionmaker, bucket_id: int, obj: Dict) -> None:
+    new_object = S3BUCKETOBJECTS(
+        bucket_id=bucket_id,
+        bucket=obj['bucket'],
         key=obj['key'],
         sizeBytes=obj['sizeBytes'],
         sizeKb=obj['sizeKb'],
@@ -143,56 +224,13 @@ def addObject(session: sessionmaker, s3_bucket: dict, obj: dict, bucket_name: st
         sizeGb=obj['sizeGb'],
         costPerMonth=obj['costPerMonth']
     )
-    session.add(s3_object)
-    logger.info(f"Adding new object {obj['key']} to bucket {bucket_name} in the database.")
+    session.add(new_object)
 
-def modifyBucket(session: sessionmaker, bucket_id: int, bucket: dict):
-    modified_bucket = session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_id).first()
-    if modified_bucket:
-        modified_bucket.totalSizeBytes = bucket['totalSizeBytes']
-        modified_bucket.totalSizeKb = bucket['totalSizeKb']
-        modified_bucket.totalSizeMb = bucket['totalSizeMb']
-        modified_bucket.totalSizeGb = bucket['totalSizeGb']
-        modified_bucket.costPerMonth = bucket['costPerMonth']
-        logger.info(f"Modified bucket {bucket['bucket']} in the database.")
-    else:
-        logger.info(f"Bucket {bucket['bucket']} not found in the database. Could not modify.")
-    session.refresh(modified_bucket)
-    return modified_bucket
-
-def modifyObject(session: sessionmaker, obj: dict, obj_key: str):
-    modified_obj = session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.key == obj_key).first()
-    if modified_obj:
-        modified_obj.sizeBytes = obj['sizeBytes']
-        modified_obj.sizeKb = obj['sizeKb']
-        modified_obj.sizeMb = obj['sizeMb']
-        modified_obj.sizeGb = obj['sizeGb']
-        modified_obj.costPerMonth = obj['costPerMonth']
-        logger.info(f"Modified object {obj_key} in the database.")
-    else:
-        logger.info(f"Object {obj_key} not found in the database. Could not modify.")
+def deleteObject(session: sessionmaker, object_id: int) -> None:
+    session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.id == object_id).delete()
     session.commit()
 
-def deleteBucket(session: sessionmaker, bucket_data: S3BUCKETS):
-    objects = session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket_id == bucket_data.id).all()
-    for obj in objects:
-        session.delete(obj)
-    bucket = session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_data.id).first()
-    if bucket:
-        session.delete(bucket)
-        session.commit()
-        logger.info(f"Deleted bucket {bucket.bucket} from the database.")
-    else:
-        logger.info(f"Bucket {bucket.bucket} not found in the database. Could not delete.")
-
-def deleteObject(session: sessionmaker, obj: S3BUCKETOBJECTS):
-    obj = session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.id == obj.id).first()
-    if obj:
-        session.delete(obj)
-        session.commit()
-        logger.info(f"Deleted object {obj.key} from the database.")
-    else:
-        logger.info(f"Object {obj.key} not found in the database. Could not delete.")
+##################################### AWS Helper Functions #################################################
 
 def getAccountSession(account: dict) -> boto3.session.Session:
     session = boto3.Session()
@@ -211,12 +249,15 @@ def getAccountSession(account: dict) -> boto3.session.Session:
     )
     return account_session
 
-def getBucketsData(session: boto3.session.Session):
+def getBucketsData(session: boto3.session.Session) -> list:
     logger.info('Retrieving S3 bucket data from AWS...')
+    bucket_list = []
+
     s3 = session.client('s3')
     buckets = s3.list_buckets()
-    bucket_list = []
+
     for bucket in buckets['Buckets']:
+        
         bucket_dict = {
             'bucket': bucket['Name'],
             'totalSizeBytes': 0,
@@ -226,22 +267,30 @@ def getBucketsData(session: boto3.session.Session):
             'costPerMonth': 0,
             'objects': []
         }
-        objects = s3.list_objects_v2(Bucket=bucket['Name'])
         
+        paginator = s3.get_paginator('list_objects_v2')
+    
         object_list = []
+    
         total_bucket_cost = 0
-        if 'Contents' in objects:
-            for obj in objects['Contents']:
-                object_dict = {
-                    'key': obj['Key'],
-                    'sizeBytes': obj['Size'],
-                    'sizeKb': round(obj['Size'] / 1024, 2),  # Converts bytes to KB
-                    'sizeMb': round(obj['Size'] / (1024 * 1024), 2),  # Converts bytes to MB
-                    'sizeGb': round(obj['Size'] / (1024 * 1024 * 1024), 4),  # Converts bytes to GB
-                }
-                object_dict['costPerMonth'] = object_dict['sizeGb'] * 0.023
-                total_bucket_cost = total_bucket_cost + object_dict['costPerMonth']
-                object_list.append(object_dict)
+    
+        object_iterator = paginator.paginate(Bucket=bucket['Name'])
+        for page in object_iterator:
+            if 'Contents' in page:
+                for obj in page['Contents']:
+                    object_dict = {
+                        'key': obj['Key'],
+                        'bucket': bucket['Name'],
+                        'sizeBytes': obj['Size'],
+                        'sizeKb': round(obj['Size'] / 1024, 2),  # Converts bytes to KB
+                        'sizeMb': round(obj['Size'] / (1024 * 1024), 2),  # Converts bytes to MB
+                        'sizeGb': round(obj['Size'] / (1024 * 1024 * 1024), 4),  # Converts bytes to GB
+                    }
+                    object_dict['costPerMonth'] = object_dict['sizeGb'] * 0.023
+                    object_dict['hash'] = hash((object_dict['sizeBytes'], object_dict['costPerMonth']))
+                    total_bucket_cost = total_bucket_cost + object_dict['costPerMonth']
+                    object_list.append(object_dict)
+
         bucket_dict['totalSizeBytes'] = sum([obj['sizeBytes'] for obj in object_list])
         bucket_dict['totalSizeKb'] = round(sum([obj['sizeKb'] for obj in object_list]), 4)
         bucket_dict['totalSizeMb'] = round(sum([obj['sizeMb'] for obj in object_list]), 4)
@@ -249,10 +298,9 @@ def getBucketsData(session: boto3.session.Session):
         bucket_dict['costPerMonth'] = round(total_bucket_cost, 6)
         bucket_dict['objects'] = object_list
         bucket_list.append(bucket_dict)
+
     logger.info('S3 bucket data retrieved.')
     return bucket_list
-
-
 
 def getDatabaseCredentials() -> dict:
     secret_id = "arn:aws:secretsmanager:us-east-1:061039789243:secret:rds!db-555390f8-60f2-4d37-ad75-e63d8f0cbfa9-0s9oyX"
@@ -271,6 +319,8 @@ def getDatabaseCredentials() -> dict:
         return credentials
     except ClientError as e:
         raise e
+
+##################################### Database Helper Functions #################################################
 
 def getEngine() -> create_engine:
     credentials = getDatabaseCredentials()
@@ -296,6 +346,3 @@ def getObjectsForBucket(bucket_id: int) -> list:
     result = session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket_id == bucket_id).all()
     session.close()
     return result
-
-if __name__ == '__main__':
-    lambda_handler(None, None)
