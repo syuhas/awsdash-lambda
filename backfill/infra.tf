@@ -18,6 +18,6 @@ resource "aws_lambda_function" "backfill" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.10"
   timeout       = 900
-  memory_size   = 256
+  memory_size   = 4096
   source_code_hash = filebase64sha256("lambda_function.zip")
 }
