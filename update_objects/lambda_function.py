@@ -67,7 +67,7 @@ def lambda_handler(event, context):
                             addObject(bucket_name, key)            
                         if eventName == 'ObjectRemoved:Delete' or eventName == 'ObjectRemoved:DeleteMarkerCreated':
                             deleteObject(bucket_name, key)
-                            
+
                 else:
                     return {
                         'statusCode': 400,
@@ -138,7 +138,7 @@ def addObject(bucket_name: str, key: str):
         
         db.commit()
         db.close()
-        
+        logger.info(f"Added object {key} to the database.")
     except Exception as e:
         logger.exception(e)
         return {
@@ -165,6 +165,7 @@ def updateBucket(bucket_name: str, obj: S3BUCKETOBJECTS, add: bool = True):
 
         db.commit()
         db.close()
+        logger.info(f"Updated bucket {bucket_name} in the database.")
     except Exception as e:
         logger.exception(e)
         return {
@@ -187,9 +188,9 @@ def deleteObject(bucket_name: str, key: str):
 
         if obj:
             db.delete(obj)
-            logger.info(f"Deleted object {obj.key} from the database.")
             db.commit()
             db.close()
+            logger.info(f"Deleted object {obj.key} from the database.")
         else:
             logger.info(f"Object {key} not found in the database. Could not delete.")
 

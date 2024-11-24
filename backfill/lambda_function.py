@@ -178,6 +178,7 @@ def modifyBucket(session, bucket_id: int, bucket: Dict, account_id: str) -> None
         "totalSizeGb": bucket["totalSizeGb"],
         "costPerMonth": bucket["costPerMonth"],
     })
+    session.commit()
 
 
 def addBucket(session: sessionmaker, bucket: Dict, account_id: str) -> str:
@@ -191,11 +192,13 @@ def addBucket(session: sessionmaker, bucket: Dict, account_id: str) -> str:
         costPerMonth=bucket['costPerMonth']
     )
     session.add(new_bucket)
+    session.commit()
     return new_bucket.id
 
 def deleteBucket(session: sessionmaker, bucket_id: int) -> None:
     session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.bucket_id == bucket_id).delete()
     session.query(S3BUCKETS).filter(S3BUCKETS.id == bucket_id).delete()
+    session.commit()
 
 ##################################### Helper Functions for Objects #################################################
 
@@ -212,6 +215,7 @@ def modifyObject(session: sessionmaker, object_id: int, object: Dict) -> None:
         "sizeGb": object["sizeGb"],
         "costPerMonth": object["costPerMonth"]
     })
+    session.commit()
 
 def addObject(session: sessionmaker, bucket_id: int, obj: Dict) -> None:
     new_object = S3BUCKETOBJECTS(
@@ -225,6 +229,7 @@ def addObject(session: sessionmaker, bucket_id: int, obj: Dict) -> None:
         costPerMonth=obj['costPerMonth']
     )
     session.add(new_object)
+    session.commit()
 
 def deleteObject(session: sessionmaker, object_id: int) -> None:
     session.query(S3BUCKETOBJECTS).filter(S3BUCKETOBJECTS.id == object_id).delete()
