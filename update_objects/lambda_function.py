@@ -54,19 +54,30 @@ def lambda_handler(event, context):
     #     event = json.load(file)
 
     try:
-        for record in event['Records']:
-            eventName = record['eventName']
-            bucket_name = record['s3']['bucket']['name']
-            key = record['s3']['object']['key']
-        
-        
-            if eventName == 'ObjectCreated:Put' or eventName == 'ObjectCreated:Post':
-                addObject(bucket_name, key)
-            
-            
-            if eventName == 'ObjectRemoved:Delete' or eventName == 'ObjectRemoved:DeleteMarkerCreated':
-                deleteObject(bucket_name, key)
-        
+        if 'Records' in event:
+            for record in event['Records']:
+                body = json.loads(record['body'])
+                if 'Records' in body:
+                    for b in body['Records']:
+                        eventName = b['eventName']
+                        bucket_name = b['s3']['bucket']['name']
+                        key = b['s3']['object']['key']
+
+                        if eventName == 'ObjectCreated:Put' or eventName == 'ObjectCreated:Post':
+                            addObject(bucket_name, key)            
+                        if eventName == 'ObjectRemoved:Delete' or eventName == 'ObjectRemoved:DeleteMarkerCreated':
+                            deleteObject(bucket_name, key)
+                            
+                else:
+                    return {
+                        'statusCode': 400,
+                        'body': json.dumps('Could not process event.')
+                    }
+        else:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Could not process event.')
+            }
         
     except KeyError as e:
         logger.exception(e)
@@ -236,6 +247,3 @@ def getDatabaseSession() -> sessionmaker:
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
-
-if __name__ == '__main__':
-    lambda_handler(None, None)
