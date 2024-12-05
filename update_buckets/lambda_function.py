@@ -52,9 +52,9 @@ class S3BUCKETOBJECTS(Base):
 def lambda_handler(event, context):
     logger.info("Event Recieved: {}", event)
     logger.info("Context: {}", context)
-    filepath = Path(__file__).resolve().parent / 'tests/delete2.json'
-    with open(filepath, 'r') as file:
-        event = json.load(file)
+    # filepath = Path(__file__).resolve().parent / 'tests/delete2.json'
+    # with open(filepath, 'r') as file:
+    #     event = json.load(file)
 
 
     try:
