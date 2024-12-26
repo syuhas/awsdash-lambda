@@ -4,7 +4,7 @@ import json
 import boto3.session
 from loguru import logger
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship, scoped_session
 from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, BigInteger
 from botocore.exceptions import ClientError
 from concurrent.futures import ThreadPoolExecutor
@@ -87,7 +87,7 @@ def backfillDatabase(buckets: List[dict], account_id: str) -> dict:
         try:
             with ThreadPoolExecutor() as executor:
                 futures = [
-                    executor.submit(processBucket, session, bucket, existing_db_buckets, existing_db_objects, account_id, current_keys) for bucket in buckets
+                    executor.submit(processBucket, bucket, existing_db_buckets, existing_db_objects, account_id, current_keys) for bucket in buckets
                 ]
                 for future in futures:
                     future.result()
@@ -102,12 +102,12 @@ def backfillDatabase(buckets: List[dict], account_id: str) -> dict:
                 'body': json.dumps(f'An error occurred: {e}')
             }
             
-        
+
         objects_to_delete = set(existing_db_objects.keys()) - current_keys
         buckets_to_delete = set(existing_db_buckets.keys()) - current_buckets
         for obj in objects_to_delete:
             logger.info(f'Deleting object from database {obj}')
-            deleteObject(session, existing_db_objects[obj])
+            deleteObject(session, existing_db_objects[obj]['id'])
         for bucket in buckets_to_delete:
             logger.info(f'Deleting bucket from database {bucket}')
             deleteBucket(session, existing_db_buckets[bucket])
@@ -124,31 +124,34 @@ def backfillDatabase(buckets: List[dict], account_id: str) -> dict:
 
 
 
-def processBucket(session: sessionmaker, bucket: Dict, existing_db_buckets: Dict, existing_db_objects: Dict, account_id: str, current_keys: set) -> None:
+def processBucket(bucket: Dict, existing_db_buckets: Dict, existing_db_objects: Dict, account_id: str, current_keys: set) -> None:
     bucket_id = existing_db_buckets.get(bucket['bucket'])
     try:
+        thread_session = getThreadsafeDatabaseSession()
         if bucket_id:
             logger.info(f'Bucket {bucket["bucket"]} already exists in the database.')
-            if bucketNeedsUpdate(session, bucket_id, bucket, account_id):
-                modifyBucket(session, bucket_id, bucket, account_id)
+            if bucketNeedsUpdate(thread_session, bucket_id, bucket, account_id):
+                modifyBucket(thread_session, bucket_id, bucket, account_id)
                 logger.info(f'Bucket {bucket["bucket"]} updated.')
         else:
             logger.info(f'Adding bucket {bucket["bucket"]} to the database.')
-            bucket_id = addBucket(session, bucket, account_id)
+            bucket_id = addBucket(thread_session, bucket, account_id)
 
         for obj in bucket['objects']:
             object_key = (bucket_id, obj['key'])
             if object_key in existing_db_objects:
-                logger.info(f'{obj["key"]} exists in the database.')
+                # logger.info(f'{obj["key"]} exists in the database.')
                 existing_object = existing_db_objects[object_key]
                 if objectNeedsUpdate(existing_object, obj):
-                    modifyObject(session, existing_object['id'], obj)
+                    modifyObject(thread_session, existing_object['id'], obj)
 
             else:
                 logger.info(f'Adding object {obj["key"]} to the database.')
-                addObject(session, bucket_id, obj)
+                addObject(thread_session, bucket_id, obj)
 
             current_keys |= ({(bucket_id, obj['key'])})
+        thread_session.commit()
+        thread_session.remove()
 
     except Exception as e:
         logger.exception(e)
@@ -262,7 +265,7 @@ def getBucketsData(session: boto3.session.Session) -> list:
     buckets = s3.list_buckets()
 
     for bucket in buckets['Buckets']:
-        
+        # if bucket['Name'].startswith('aws-cloudtrail'):
         bucket_dict = {
             'bucket': bucket['Name'],
             'totalSizeBytes': 0,
@@ -338,6 +341,16 @@ def getDatabaseSession() -> sessionmaker:
     engine = getEngine()
     Session = sessionmaker(bind=engine)
     session = Session()
+    # session_factory = sessionmaker(bind=engine)
+    # session = scoped_session(session_factory)
+    return session
+
+def getThreadsafeDatabaseSession() -> scoped_session:
+    engine = getEngine()
+    # Session = sessionmaker(bind=engine)
+    # session = Session()
+    session_factory = sessionmaker(bind=engine)
+    session = scoped_session(session_factory)
     return session
 
 def getBuckets(account_id: str) -> list:

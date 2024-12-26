@@ -162,3 +162,6 @@ cython_debug/
 #.idea/
 tempCodeRunnerFile.py
 backfill/tempCodeRunnerFile.py
+
+backfill/.terraform
+backfill/.terraform.lock.hcl
